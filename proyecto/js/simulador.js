@@ -1,52 +1,65 @@
-const DESCUENTO = 0.1; 
-let productos = [];
-let precios = [];
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("formProducto");
+  const lista = document.getElementById("listaProductos");
+  const vaciarBtn = document.getElementById("vaciarLista");
 
-function agregarProducto() {
-    let nombre = prompt("Ingrese el nombre del producto:");
-    let precio = parseFloat(prompt("Ingrese el precio de " + nombre + ":"));
-    
-    if (!isNaN(precio) && precio > 0) {
-        productos.push(nombre);
-        precios.push(precio);
-        console.log(`Producto agregado: ${nombre} - $${precio}`);
-    } else {
-        alert("Precio inválido. Intente nuevamente.");
+  
+  let productos = JSON.parse(localStorage.getItem("productos")) || [];
+
+  
+  const guardarProductos = () => {
+    localStorage.setItem("productos", JSON.stringify(productos));
+  };
+
+  
+  const renderizarProductos = () => {
+    lista.innerHTML = ""; 
+    productos.forEach((prod, index) => {
+      const li = document.createElement("li");
+      li.textContent = `${prod.nombre} - Cantidad: ${prod.cantidad}`;
+
+      
+      const btnEliminar = document.createElement("button");
+      btnEliminar.textContent = "Eliminar";
+      btnEliminar.style.backgroundColor = "#dc3545";
+      btnEliminar.style.color = "white";
+      btnEliminar.style.border = "none";
+      btnEliminar.style.padding = "5px 10px";
+      btnEliminar.style.borderRadius = "4px";
+      btnEliminar.style.cursor = "pointer";
+
+      btnEliminar.addEventListener("click", () => {
+        productos.splice(index, 1); 
+        guardarProductos();
+        renderizarProductos();
+      });
+
+      li.appendChild(btnEliminar);
+      lista.appendChild(li);
+    });
+  };
+
+  
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const nombre = document.getElementById("nombre").value.trim();
+    const cantidad = parseInt(document.getElementById("cantidad").value);
+
+    if(nombre !== "" && cantidad > 0) {
+      productos.push({ nombre, cantidad });
+      guardarProductos();
+      renderizarProductos();
+      form.reset();
     }
-}
+  });
 
-function calcularTotal() {
-    let total = 0;
-    for (let i = 0; i < precios.length; i++) {
-        total += precios[i];
-    }
-    return total;
-}
+  
+  vaciarBtn.addEventListener("click", () => {
+    productos = [];
+    guardarProductos();
+    renderizarProductos();
+  });
 
-function mostrarResumen() {
-    console.clear();
-    console.log("=== RESUMEN DE COMPRA ===");
-    for (let i = 0; i < productos.length; i++) {
-        console.log(`${productos[i]} - $${precios[i]}`);
-    }
-
-    let total = calcularTotal();
-    console.log("Total sin descuento: $" + total);
-
-    if (total > 500) {
-        let descuento = total * DESCUENTO;
-        total -= descuento;
-        console.log(`Descuento aplicado: $${descuento}`);
-    }
-
-    console.log("TOTAL A PAGAR: $" + total);
-    alert("Resumen mostrado en la consola. Revísala para ver detalles.");
-}
-
-alert("Bienvenido al simulador de compras.");
-
-do {
-    agregarProducto();
-} while (confirm("¿Desea agregar otro producto?"));
-
-mostrarResumen();
+  
+  renderizarProductos();
+});
